@@ -1,0 +1,133 @@
+<div class="sidebar">
+
+  <div class="sidebar-header">
+    <h4>Store Management</h4>
+  </div>
+
+  <ul class="sidebar-menu">
+
+    <li *ngIf="canSee('dashboard')">
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('branch')">
+      <a routerLink="/branch" routerLinkActive="active">
+        <i class="bi bi-building"></i>
+        <span>Branch</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('warehouse')">
+      <a routerLink="/warehouse" routerLinkActive="active">
+        <i class="bi bi-box-seam"></i>
+        <span>Warehouse</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('category')">
+      <a routerLink="/category" routerLinkActive="active">
+        <i class="bi bi-tags"></i>
+        <span>Category</span>
+      </a>
+    </li>
+    <li *ngIf="canSee('products')">
+      <a routerLink="/products" routerLinkActive="active">
+        <i class="bi bi-box"></i>
+        <span>Product</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('suppliers')">
+      <a routerLink="/suppliers" routerLinkActive="active">
+        <i class="bi bi-truck"></i>
+        <span>Supplier</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('supplier-payments')">
+      <a routerLink="/supplier-payments" routerLinkActive="active">
+        <i class="bi bi-cash-coin"></i>
+        <span>Supplier-payment</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('customers')">
+      <a routerLink="/customers" routerLinkActive="active">
+        <i class="bi bi-people"></i>
+        <span>Customer</span>
+      </a>
+    </li>
+    <li *ngIf="canSee('customer-payments')">
+      <a routerLink="/customer-payments" routerLinkActive="active">
+        <i class="bi bi-cash-stack"></i>
+        <span>Customer-Payment</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('inventory')">
+      <a routerLink="/inventory" routerLinkActive="active">
+        <i class="bi bi-clipboard-data"></i>
+        <span>Inventory</span>
+      </a>
+    </li>
+
+    <li *ngIf="canSee('purchases')">
+      <a routerLink="/purchases" routerLinkActive="active">
+        <i class="bi bi-cart-plus"></i>
+        <span>purchase</span>
+      </a>
+    </li>
+    <li *ngIf="canSee('purchase-returns')">
+      <a routerLink="/purchase-returns" routerLinkActive="active">
+        <i class="bi bi-cart-x"></i>
+        <span>Purchase-Return</span>
+      </a>
+    </li>
+    <li *ngIf="canSee('sales')">
+      <a routerLink="/sales" routerLinkActive="active">
+        <i class="bi bi-cart-check"></i>
+        <span>Sale</span>
+      </a>
+    </li>
+    <li *ngIf="canSee('sale-returns')">
+      <a routerLink="/sale-returns" routerLinkActive="active">
+        <i class="bi bi-cart-x"></i>
+        <span>Sale-Return</span>
+      </a>
+    </li>
+    <li *ngIf="canSee('stock-transfers')">
+      <a routerLink="/stock-transfers" routerLinkActive="active">
+        <i class="bi bi-boxes"></i>
+        <span>Stock-Transfer</span>
+      </a>
+    </li>
+
+    <ng-container *ngIf="canSee('users') || canSee('roles')">
+      <li *ngIf="canSee('users')">
+        <a routerLink="/users" routerLinkActive="active">
+          <i class="bi bi-person"></i>
+          <span>User</span>
+        </a>
+      </li>
+
+      <li *ngIf="canSee('roles')">
+        <a routerLink="/roles" routerLinkActive="active">
+          <i class="bi bi-shield-lock"></i>
+          <span>Role</span>
+        </a>
+      </li>
+    </ng-container>
+
+    <li *ngIf="!isLoggedIn">
+      <a routerLink="/login" routerLinkActive="active">
+        <i class="bi bi-person-lock"></i>
+        <span>Auth</span>
+      </a>
+    </li>
+
+  </ul>
+
+</div>

@@ -1,0 +1,421 @@
+<div class="container-fluid py-4">
+
+  <!-- ===================================================== -->
+  <!-- PAGE HEADER -->
+  <!-- ===================================================== -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">
+        <i class="bi bi-arrow-left-right me-2"></i>
+        Stock Transfer
+      </h3>
+      <p class="text-muted mb-0">
+        Transfer products from one warehouse to another
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="reset()">
+      <i class="bi bi-plus-circle me-1"></i>
+      New Transfer
+    </button>
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- ERROR ALERT -->
+  <!-- ===================================================== -->
+  <div
+    *ngIf="error"
+    class="alert alert-danger alert-dismissible fade show"
+    role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null" aria-label="Close"></button>
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- STOCK TRANSFER FORM -->
+  <!-- ===================================================== -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0 fw-semibold">
+        <i class="bi bi-arrow-left-right me-2"></i>
+        {{ editId !== null ? 'Update Stock Transfer' : 'Create Stock Transfer' }}
+      </h5>
+    </div>
+
+    <div class="card-body">
+      <form [formGroup]="stockTransferForm" (ngSubmit)="save()">
+
+        <!-- ================================================= -->
+        <!-- WAREHOUSE SECTION -->
+        <!-- ================================================= -->
+        <div class="row g-3 mb-4">
+
+          <!-- FROM WAREHOUSE -->
+          <div class="col-md-5">
+            <label class="form-label fw-semibold">
+              From Warehouse <span class="text-danger">*</span>
+            </label>
+
+            <select
+              class="form-select"
+              formControlName="fromWarehouseId"
+              [ngClass]="{
+                'is-invalid': stockTransferForm.get('fromWarehouseId')?.touched && 
+                              stockTransferForm.get('fromWarehouseId')?.invalid
+              }">
+              <option value="">Select From Warehouse</option>
+              <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">
+                {{ warehouse.name }}
+              </option>
+            </select>
+
+            <div
+              class="invalid-feedback"
+              *ngIf="stockTransferForm.get('fromWarehouseId')?.touched && 
+                     stockTransferForm.get('fromWarehouseId')?.invalid">
+              From warehouse is required.
+            </div>
+          </div>
+
+          <!-- TRANSFER ARROW -->
+          <div class="col-md-2 d-flex justify-content-center align-items-center pt-md-4">
+            <i class="bi bi-arrow-right fs-2 text-primary d-none d-md-inline"></i>
+            <i class="bi bi-arrow-down fs-2 text-primary d-md-none my-2"></i>
+          </div>
+
+          <!-- TO WAREHOUSE -->
+          <div class="col-md-5">
+            <label class="form-label fw-semibold">
+              To Warehouse <span class="text-danger">*</span>
+            </label>
+
+            <select
+              class="form-select"
+              formControlName="toWarehouseId"
+              [ngClass]="{
+                'is-invalid': stockTransferForm.get('toWarehouseId')?.touched && 
+                              stockTransferForm.get('toWarehouseId')?.invalid
+              }">
+              <option value="">Select To Warehouse</option>
+              <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">
+                {{ warehouse.name }}
+              </option>
+            </select>
+
+            <div
+              class="invalid-feedback"
+              *ngIf="stockTransferForm.get('toWarehouseId')?.touched && 
+                     stockTransferForm.get('toWarehouseId')?.invalid">
+              To warehouse is required.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================================================= -->
+        <!-- STATUS -->
+        <!-- ================================================= -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">
+              Status <span class="text-danger">*</span>
+            </label>
+
+            <select
+              class="form-select"
+              formControlName="status"
+              [ngClass]="{
+                'is-invalid': stockTransferForm.get('status')?.touched && 
+                              stockTransferForm.get('status')?.invalid
+              }">
+              <option *ngFor="let status of stockTransferStatuses" [value]="status">
+                {{ status }}
+              </option>
+            </select>
+
+            <div
+              class="invalid-feedback"
+              *ngIf="stockTransferForm.get('status')?.touched && 
+                     stockTransferForm.get('status')?.invalid">
+              Status is required.
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================= -->
+        <!-- PRODUCT SECTION HEADER -->
+        <!-- ================================================= -->
+        <div class="d-flex justify-content-between align-items-center mb-3 pt-2 border-top">
+          <h5 class="mb-0 fw-semibold text-secondary">
+            <i class="bi bi-box-seam me-2"></i>
+            Transfer Products
+          </h5>
+
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-sm"
+            (click)="addItem()"
+            [disabled]="!stockTransferForm.get('fromWarehouseId')?.value || filteredProducts.length === 0">
+            <i class="bi bi-plus-lg me-1"></i>
+            Add Product
+          </button>
+        </div>
+
+        <!-- ================================================= -->
+        <!-- DYNAMIC ITEMS ARRAY -->
+        <!-- ================================================= -->
+        <div formArrayName="items">
+
+          <!-- NO WAREHOUSE SELECTED WARNING -->
+          <div *ngIf="!stockTransferForm.get('fromWarehouseId')?.value" class="alert alert-info text-center my-3">
+            <i class="bi bi-info-circle me-2"></i>
+            Please select a <strong>From Warehouse</strong> first to view inventory products.
+          </div>
+
+          <!-- NO PRODUCTS IN SELECTED WAREHOUSE WARNING -->
+          <div *ngIf="stockTransferForm.get('fromWarehouseId')?.value && filteredProducts.length === 0" class="alert alert-warning text-center my-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            No inventory stock found in the selected warehouse.
+          </div>
+
+          <!-- NO ITEMS ADDED YET WARNING -->
+          <div *ngIf="stockTransferForm.get('fromWarehouseId')?.value && filteredProducts.length > 0 && items.length === 0" class="alert alert-warning text-center my-3">
+            <i class="bi bi-info-circle me-2"></i>
+            No products added yet. Click <strong>Add Product</strong> above to add items.
+          </div>
+
+          <!-- DYNAMIC ITEM ROW -->
+          <div
+            *ngFor="let item of items.controls; let i = index"
+            [formGroupName]="i"
+            class="row g-3 align-items-start mb-3 p-3 bg-light border rounded">
+
+            <!-- PRODUCT SELECT -->
+            <div class="col-md-7">
+              <label class="form-label fw-semibold small">
+                Product <span class="text-danger">*</span>
+              </label>
+
+              <select
+                class="form-select"
+                formControlName="productId"
+                [ngClass]="{
+                  'is-invalid': item.get('productId')?.touched && 
+                                item.get('productId')?.invalid
+                }">
+                <option value="">Select Product</option>
+                <option *ngFor="let product of filteredProducts" [value]="product.id">
+                  {{ product.name }} (Available: {{ product.availableQuantity }})
+                </option>
+              </select>
+
+              <div
+                class="invalid-feedback"
+                *ngIf="item.get('productId')?.touched && 
+                       item.get('productId')?.invalid">
+                Product choice is required.
+              </div>
+            </div>
+
+            <!-- QUANTITY -->
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small">
+                Quantity <span class="text-danger">*</span>
+              </label>
+
+              <input
+                type="number"
+                class="form-control"
+                min="1"
+                formControlName="quantity"
+                placeholder="Enter quantity"
+                [ngClass]="{
+                  'is-invalid': item.get('quantity')?.touched && 
+                                item.get('quantity')?.invalid
+                }">
+
+              <div
+                class="invalid-feedback"
+                *ngIf="item.get('quantity')?.touched && 
+                       item.get('quantity')?.invalid">
+                Quantity must be at least 1.
+              </div>
+            </div>
+
+            <!-- REMOVE BUTTON -->
+            <div class="col-md-2 pt-md-4">
+              <button
+                type="button"
+                class="btn btn-outline-danger w-100"
+                (click)="removeItem(i)"
+                title="Remove item">
+                <i class="bi bi-trash me-1"></i>
+                Remove
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ================================================= -->
+        <!-- FORM ACTIONS -->
+        <!-- ================================================= -->
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="reset()">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Reset
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-success px-4"
+            [disabled]="loading || items.length === 0">
+
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true">
+            </span>
+
+            <i *ngIf="!loading" class="bi bi-check-circle me-1"></i>
+
+            {{ editId !== null ? 'Update Transfer' : 'Save Transfer' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- STOCK TRANSFER LIST TABLE -->
+  <!-- ===================================================== -->
+  <div class="card shadow-sm">
+
+    <div class="card-header bg-white py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold text-dark">
+          <i class="bi bi-list-ul me-2"></i>
+          Stock Transfer List
+        </h5>
+
+        <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">
+          Total: {{ stockTransfers.length }}
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+
+      <!-- SPINNER STATE -->
+      <div
+        *ngIf="loading && stockTransfers.length === 0"
+        class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-2 mb-0">Loading stock transfers...</p>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div
+        *ngIf="!loading && stockTransfers.length === 0"
+        class="text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+        <p class="text-muted mb-0">No stock transfers found.</p>
+      </div>
+
+      <!-- DATA TABLE -->
+      <div
+        *ngIf="stockTransfers.length > 0"
+        class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 5%;">#</th>
+              <th scope="col" style="width: 25%;">From Warehouse</th>
+              <th scope="col" class="text-center" style="width: 5%;"></th>
+              <th scope="col" style="width: 25%;">To Warehouse</th>
+              <th scope="col" style="width: 15%;">Status</th>
+              <th scope="col" style="width: 15%;">Created At</th>
+              <th scope="col" class="text-center" style="width: 10%;">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let transfer of stockTransfers; let i = index">
+              <td>{{ i + 1 }}</td>
+
+              <td>
+                <span class="fw-semibold text-dark">
+                  {{ transfer.fromWarehouseName }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <i class="bi bi-arrow-right text-primary fs-5"></i>
+              </td>
+
+              <td>
+                <span class="fw-semibold text-dark">
+                  {{ transfer.toWarehouseName }}
+                </span>
+              </td>
+
+              <td>
+                <span
+                  class="badge px-2 py-1"
+                  [ngClass]="{
+                    'bg-warning text-dark': transfer.status === 'PENDING',
+                    'bg-success': transfer.status === 'APPROVED' || transfer.status === 'COMPLETED',
+                    'bg-danger': transfer.status === 'REJECTED'
+                  }">
+                  {{ transfer.status }}
+                </span>
+              </td>
+
+              <td class="text-muted small">
+                {{ transfer.createdAt | date:'medium' }}
+              </td>
+
+              <td class="text-center">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary me-1"
+                  title="Edit"
+                  (click)="edit(transfer)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  title="Delete"
+                  (click)="delete(transfer.id)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

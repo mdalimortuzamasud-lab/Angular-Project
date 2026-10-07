@@ -1,0 +1,317 @@
+<div class="container-fluid py-4">
+
+  <!-- =========================
+       PAGE HEADER
+  ========================== -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">
+        <i class="bi bi-cash-coin me-2"></i>
+        Supplier Payment
+      </h4>
+      <small class="text-muted">
+        Manage supplier payments and purchase status
+      </small>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      (click)="resetPaymentForm()">
+      <i class="bi bi-arrow-clockwise me-1"></i>
+      Reset
+    </button>
+  </div>
+
+
+  <!-- =========================
+       SUPPLIER PAYMENT FORM
+  ========================== -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <h5 class="mb-0 fw-bold">
+        <i
+          class="bi"
+          [ngClass]="editPaymentId ? 'bi-pencil-square' : 'bi-plus-circle'">
+        </i>
+        {{ editPaymentId ? 'Update Supplier Payment' : 'Create Supplier Payment' }}
+      </h5>
+    </div>
+
+    <div class="card-body">
+      <form [formGroup]="paymentForm" (ngSubmit)="savePayment()">
+        <div class="row g-3">
+
+          <!-- SUPPLIER -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              Supplier <span class="text-danger">*</span>
+            </label>
+
+            <select
+              class="form-select"
+              formControlName="supplierId"
+              [class.is-invalid]="
+                paymentForm.get('supplierId')?.invalid &&
+                paymentForm.get('supplierId')?.touched
+              ">
+              <option value="">-- Select Supplier --</option>
+              <option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                {{ supplier.name }}
+              </option>
+            </select>
+
+            <div
+              class="invalid-feedback"
+              *ngIf="
+                paymentForm.get('supplierId')?.invalid &&
+                paymentForm.get('supplierId')?.touched
+              ">
+              Please select a supplier.
+            </div>
+          </div>
+
+          <!-- AMOUNT -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              Amount <span class="text-danger">*</span>
+            </label>
+
+            <div class="input-group">
+              <span class="input-group-text">৳</span>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="amount"
+                placeholder="0.00"
+                [class.is-invalid]="
+                  paymentForm.get('amount')?.invalid &&
+                  paymentForm.get('amount')?.touched
+                " />
+            </div>
+
+            <div
+              class="invalid-feedback d-block"
+              *ngIf="
+                paymentForm.get('amount')?.invalid &&
+                paymentForm.get('amount')?.touched
+              ">
+              Please enter a valid amount (greater than 0).
+            </div>
+          </div>
+
+          <!-- PAYMENT METHOD -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              Payment Method <span class="text-danger">*</span>
+            </label>
+
+            <select
+              class="form-select"
+              formControlName="paymentMethod"
+              [class.is-invalid]="
+                paymentForm.get('paymentMethod')?.invalid &&
+                paymentForm.get('paymentMethod')?.touched
+              ">
+              <option *ngFor="let method of paymentMethods" [value]="method">
+                {{ method }}
+              </option>
+            </select>
+
+            <div
+              class="invalid-feedback"
+              *ngIf="
+                paymentForm.get('paymentMethod')?.invalid &&
+                paymentForm.get('paymentMethod')?.touched
+              ">
+              Please select a payment method.
+            </div>
+          </div>
+
+          <!-- PAYMENT DATE -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              Payment Date <span class="text-danger">*</span>
+            </label>
+
+            <input
+              type="datetime-local"
+              class="form-control"
+              formControlName="date"
+              [class.is-invalid]="
+                paymentForm.get('date')?.invalid &&
+                paymentForm.get('date')?.touched
+              " />
+
+            <div
+              class="invalid-feedback"
+              *ngIf="
+                paymentForm.get('date')?.invalid &&
+                paymentForm.get('date')?.touched
+              ">
+              Please select a date.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- FORM ACTIONS -->
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="paymentForm.invalid">
+            <i
+              class="bi"
+              [ngClass]="editPaymentId ? 'bi-check-circle' : 'bi-box-arrow-in-down'">
+            </i>
+            {{ editPaymentId ? 'Update Payment' : 'Save Payment' }}
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="resetPaymentForm()">
+            <i class="bi bi-x-circle me-1"></i>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- =========================
+       SUPPLIER PAYMENTS LIST
+  ========================== -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0">
+        <i class="bi bi-list-ul me-2"></i>
+        Payment History
+      </h5>
+      <span class="badge bg-primary">{{ payments.length }}</span>
+    </div>
+
+    <div class="card-body p-0">
+      <!-- LOADING SPINNER -->
+      <div *ngIf="loading" class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- NO DATA -->
+      <div *ngIf="!loading && payments.length === 0" class="text-center text-muted p-4">
+        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+        No supplier payments found.
+      </div>
+
+      <!-- PAYMENTS TABLE -->
+      <div *ngIf="!loading && payments.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Supplier</th>
+              <th>Amount</th>
+              <th>Payment Method</th>
+              <th>Date</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payment of payments; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>
+                <strong>{{ getSupplierName(payment.supplierId) }}</strong>
+              </td>
+              <td>
+                <span class="text-success fw-bold">
+                  ৳{{ payment.amount | number:'1.2-2' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-info text-dark">
+                  {{ payment.paymentMethod }}
+                </span>
+              </td>
+              <td>
+                {{ payment.date | date:'medium' }}
+              </td>
+              <td class="text-center">
+                <div class="btn-group">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Edit"
+                    (click)="editPayment(payment)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Delete"
+                    (click)="deletePayment(payment.id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================
+       PURCHASES OVERVIEW
+  ========================== -->
+  <div class="card shadow-sm" *ngIf="purchases.length > 0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0">
+        <i class="bi bi-bag-check me-2"></i>
+        Related Purchases
+      </h5>
+      <span class="badge bg-secondary">{{ purchases.length }}</span>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Supplier</th>
+              <th>Total Amount</th>
+              <th>Paid Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let purchase of purchases; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ getSupplierName(purchase.supplierId) }}</td>
+              <td>৳{{ purchase.totalAmount | number:'1.2-2' }}</td>
+              <td>৳{{ purchase.paidAmount | number:'1.2-2' }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-warning text-dark': getStatusClass(purchase.status) === 'pending',
+                    'bg-info text-dark': getStatusClass(purchase.status) === 'partial',
+                    'bg-success': getStatusClass(purchase.status) === 'paid',
+                    'bg-danger': getStatusClass(purchase.status) === 'cancelled'
+                  }">
+                  {{ purchase.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

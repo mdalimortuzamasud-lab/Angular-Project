@@ -1,0 +1,31 @@
+
+footer {
+  background: #212529;
+  color: #ffffff;
+  border-top: 1px solid #495057;
+  padding: 15px 0;
+  font-size: 15px;
+}
+
+footer i {
+  margin-right: 5px;
+}
+
+footer a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: #0dcaf0;
+}
+
+@media (max-width: 768px) {
+  footer .d-flex {
+    text-align: center;
+  }
+
+  footer div {
+    margin-bottom: 8px;
+  }
+}

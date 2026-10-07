@@ -1,0 +1,791 @@
+<div class="container-fluid py-4">
+
+  <!-- ========================================================= -->
+  <!-- PAGE HEADER -->
+  <!-- ========================================================= -->
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+      <h3 class="fw-bold mb-1">
+
+        <i class="bi bi-shield-lock me-2"></i>
+
+        Role Management
+
+      </h3>
+
+      <p class="text-muted mb-0">
+
+        Create, update and manage system roles
+
+      </p>
+
+    </div>
+
+
+    <button
+
+      type="button"
+
+      class="btn btn-primary"
+
+      (click)="createRole()">
+
+
+      <i class="bi bi-plus-lg me-2"></i>
+
+      Add Role
+
+    </button>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- ROLE FORM CARD -->
+  <!-- ========================================================= -->
+
+  <div class="card shadow-sm border-0 mb-4">
+
+
+    <!-- CARD HEADER -->
+
+    <div class="card-header bg-white border-0 py-3">
+
+
+      <h5 class="mb-0 fw-semibold">
+
+
+        <i
+
+          class="bi me-2"
+
+          [ngClass]="
+
+            isEditMode
+
+              ? 'bi-pencil-square'
+
+              : 'bi-shield-plus'
+
+          ">
+
+        </i>
+
+
+        {{
+
+
+          isEditMode
+
+            ? 'Edit Role'
+
+            : 'Create Role'
+
+
+        }}
+
+      </h5>
+
+    </div>
+
+
+    <!-- CARD BODY -->
+
+    <div class="card-body">
+
+
+      <form
+
+        [formGroup]="roleForm"
+
+        (ngSubmit)="saveRole()">
+
+
+        <div class="row g-3">
+
+
+          <!-- ================================================= -->
+          <!-- ROLE NAME -->
+          <!-- ================================================= -->
+
+          <div class="col-md-6 col-lg-4">
+
+
+            <label
+
+              for="roleName"
+
+              class="form-label fw-semibold">
+
+
+              Role Name
+
+              <span class="text-danger">
+
+                *
+
+              </span>
+
+            </label>
+
+
+            <select
+
+              id="roleName"
+
+              class="form-select"
+
+              formControlName="name"
+
+              [class.is-invalid]="isInvalid('name')">
+
+
+              <!-- DEFAULT OPTION -->
+
+              <option
+
+                value="">
+
+                Select Role
+
+              </option>
+
+
+              <!-- ENUM OPTIONS -->
+
+              <option
+
+                *ngFor="
+
+                  let roleName
+
+                  of roleNames
+
+                "
+
+                [value]="roleName">
+
+
+                {{ roleName }}
+
+              </option>
+
+
+            </select>
+
+
+            <!-- VALIDATION -->
+
+            <div
+
+              class="invalid-feedback"
+
+              *ngIf="isInvalid('name')">
+
+
+              Role name is required.
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- FORM ACTIONS -->
+        <!-- ================================================= -->
+
+        <div
+
+          class="d-flex
+
+                 justify-content-end
+
+                 gap-2
+
+                 mt-4">
+
+
+          <!-- CLEAR BUTTON -->
+
+          <button
+
+            type="button"
+
+            class="btn btn-secondary"
+
+            (click)="resetForm()"
+
+            [disabled]="isSaving">
+
+
+            <i
+
+              class="bi bi-x-lg me-2">
+
+            </i>
+
+
+            Clear
+
+          </button>
+
+
+          <!-- SAVE BUTTON -->
+
+          <button
+
+            type="submit"
+
+            class="btn btn-primary"
+
+            [disabled]="isSaving">
+
+
+            <!-- LOADING -->
+
+            <span
+
+              *ngIf="isSaving"
+
+              class="spinner-border
+
+                     spinner-border-sm
+
+                     me-2">
+
+
+            </span>
+
+
+            <!-- ICON -->
+
+            <i
+
+              *ngIf="!isSaving"
+
+              class="bi me-2"
+
+              [ngClass]="
+
+                isEditMode
+
+                  ? 'bi-check-lg'
+
+                  : 'bi-plus-lg'
+
+              ">
+
+
+            </i>
+
+
+            <!-- TEXT -->
+
+            {{
+
+
+              isEditMode
+
+                ? 'Update Role'
+
+                : 'Create Role'
+
+
+            }}
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- ROLE LIST CARD -->
+  <!-- ========================================================= -->
+
+  <div class="card shadow-sm border-0">
+
+
+    <!-- ======================================================= -->
+    <!-- LIST HEADER -->
+    <!-- ======================================================= -->
+
+    <div class="card-header bg-white border-0 py-3">
+
+
+      <div class="row align-items-center g-3">
+
+
+        <!-- TITLE -->
+
+        <div class="col-md-6">
+
+
+          <h5 class="mb-0 fw-semibold">
+
+
+            <i
+
+              class="bi
+
+                     bi-shield-check
+
+                     me-2">
+
+
+            </i>
+
+
+            Role List
+
+
+            <span
+
+              class="badge bg-primary ms-2">
+
+
+              {{ filteredRoles.length }}
+
+            </span>
+
+          </h5>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="col-md-6">
+
+
+          <div class="input-group">
+
+
+            <span
+
+              class="input-group-text bg-white">
+
+
+              <i
+
+                class="bi bi-search">
+
+
+              </i>
+
+            </span>
+
+
+            <input
+
+              type="text"
+
+              class="form-control"
+
+              placeholder="Search role name..."
+
+              [(ngModel)]="searchText"
+
+              (input)="onSearch()">
+
+
+            <button
+
+              *ngIf="searchText"
+
+              type="button"
+
+              class="btn btn-outline-secondary"
+
+              (click)="
+
+                searchText = '';
+
+                onSearch()
+
+              ">
+
+
+              <i
+
+                class="bi bi-x-lg">
+
+
+              </i>
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- LOADING -->
+    <!-- ========================================================= -->
+
+    <div
+
+      *ngIf="isLoading"
+
+      class="text-center py-5">
+
+
+      <div
+
+        class="spinner-border text-primary"
+
+        role="status">
+
+
+      </div>
+
+
+      <p
+
+        class="text-muted mt-3 mb-0">
+
+
+        Loading roles...
+
+      </p>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- TABLE -->
+    <!-- ========================================================= -->
+
+    <div
+
+      *ngIf="!isLoading"
+
+      class="table-responsive">
+
+
+      <table
+
+        class="table
+
+               table-hover
+
+               align-middle
+
+               mb-0">
+
+
+        <!-- TABLE HEADER -->
+
+        <thead
+
+          class="table-light">
+
+
+          <tr>
+
+
+            <th
+
+              style="width: 80px;">
+
+
+              #
+
+            </th>
+
+
+            <th>
+
+              Role Name
+
+            </th>
+
+
+            <th
+
+              class="text-center"
+
+              style="width: 180px;">
+
+
+              Actions
+
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <!-- TABLE BODY -->
+
+        <tbody>
+
+
+          <!-- ================================================= -->
+          <!-- ROLE ROW -->
+          <!-- ================================================= -->
+
+          <tr
+
+            *ngFor="
+
+              let role
+
+              of filteredRoles;
+
+              let i = index
+
+            ">
+
+
+            <!-- SERIAL -->
+
+            <td>
+
+              {{ i + 1 }}
+
+            </td>
+
+
+            <!-- ROLE NAME -->
+
+            <td>
+
+
+              <div
+
+                class="d-flex
+
+                       align-items-center">
+
+
+                <!-- ICON -->
+
+                <div
+
+                  class="rounded-circle
+
+                         bg-primary
+
+                         text-white
+
+                         d-flex
+
+                         align-items-center
+
+                         justify-content-center
+
+                         me-3"
+
+                  style="
+
+                    width: 40px;
+
+                    height: 40px;
+
+                  ">
+
+
+                  <i
+
+                    class="bi
+
+                           bi-shield-fill">
+
+
+                  </i>
+
+                </div>
+
+
+                <!-- NAME -->
+
+                <div>
+
+
+                  <strong>
+
+                    {{ role.name }}
+
+                  </strong>
+
+
+                  <div
+
+                    class="small text-muted">
+
+
+                    Role ID:
+
+                    {{ role.id }}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </td>
+
+
+            <!-- ACTIONS -->
+
+            <td
+
+              class="text-center">
+
+
+              <div
+
+                class="btn-group"
+
+                role="group">
+
+
+                <!-- EDIT -->
+
+                <button
+
+                  type="button"
+
+                  class="btn
+
+                         btn-sm
+
+                         btn-outline-primary"
+
+                  title="Edit Role"
+
+                  (click)="editRole(role)">
+
+
+                  <i
+
+                    class="bi bi-pencil">
+
+
+                  </i>
+
+                </button>
+
+
+                <!-- DELETE -->
+
+                <button
+
+                  type="button"
+
+                  class="btn
+
+                         btn-sm
+
+                         btn-outline-danger"
+
+                  title="Delete Role"
+
+                  (click)="deleteRole(role.id)">
+
+
+                  <i
+
+                    class="bi bi-trash">
+
+
+                  </i>
+
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+
+          <!-- ================================================= -->
+          <!-- NO DATA -->
+          <!-- ================================================= -->
+
+          <tr
+
+            *ngIf="
+
+              filteredRoles.length === 0
+
+            ">
+
+
+            <td
+
+              colspan="3"
+
+              class="text-center py-5">
+
+
+              <div>
+
+
+                <i
+
+                  class="bi
+
+                         bi-shield-x
+
+                         fs-1
+
+                         text-muted">
+
+
+                </i>
+
+
+                <h6
+
+                  class="mt-3">
+
+
+                  No Roles Found
+
+                </h6>
+
+
+                <p
+
+                  class="text-muted mb-0">
+
+
+                  No role matches your search.
+
+                </p>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>

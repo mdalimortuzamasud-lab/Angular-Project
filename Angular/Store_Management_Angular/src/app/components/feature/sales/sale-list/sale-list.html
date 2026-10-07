@@ -1,0 +1,65 @@
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Sales</h3>
+    <a routerLink="/sales/new" class="btn btn-primary">
+      + New Sale
+    </a>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <select class="form-select" [(ngModel)]="selectedStatus">
+        <option value="">All Statuses</option>
+        <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="text-center my-4" *ngIf="loading">
+    <div class="spinner-border" role="status"></div>
+  </div>
+
+  <table class="table table-hover align-middle" *ngIf="!loading">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Customer</th>
+        <th>Warehouse</th>
+        <th class="text-end">Total</th>
+        <th class="text-end">Paid</th>
+        <th class="text-end">Due</th>
+        <th>Status</th>
+        <th class="text-end">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let s of filteredSales">
+        <td>{{ s.id }}</td>
+        <td>{{ s.customerName }}</td>
+        <td>{{ s.warehouseName }}</td>
+        <td class="text-end">{{ s.totalAmount | number:'1.2-2' }}</td>
+        <td class="text-end">{{ s.paidAmount | number:'1.2-2' }}</td>
+        <td class="text-end">{{ s.dueAmount | number:'1.2-2' }}</td>
+        <td><span [class]="statusBadgeClass(s.status)">{{ s.status }}</span></td>
+        <td class="text-end">
+          <a [routerLink]="['/sales', s.id]" class="btn btn-sm btn-outline-primary me-1">
+            View / Items
+          </a>
+          <a [routerLink]="['/sales', s.id, 'edit']" class="btn btn-sm btn-outline-secondary me-1">
+            Edit
+          </a>
+          <button class="btn btn-sm btn-outline-danger" (click)="deleteSale(s)">
+            Delete
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="filteredSales.length === 0">
+        <td colspan="8" class="text-center text-muted py-4">No sales found.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>

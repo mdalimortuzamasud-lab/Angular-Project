@@ -1,0 +1,54 @@
+<div class="container mt-4">
+
+  <h3 class="mb-3">Inventory Transaction Log</h3>
+
+  <div class="alert alert-info" *ngIf="filterProductId && filterWarehouseId">
+    Showing history for product #{{ filterProductId }} in warehouse #{{ filterWarehouseId }}.
+    <button class="btn btn-sm btn-link" (click)="clearFilters()">Clear</button>
+  </div>
+
+  <div class="row g-2 mb-3">
+    <div class="col-md-3">
+      <select class="form-select" [(ngModel)]="selectedType" (ngModelChange)="onTypeFilterChange()">
+        <option value="">All Types</option>
+        <option *ngFor="let t of types" [value]="t">{{ t }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="text-center my-4" *ngIf="loading">
+    <div class="spinner-border" role="status"></div>
+  </div>
+
+  <table class="table table-sm table-hover align-middle" *ngIf="!loading">
+    <thead class="table-light">
+      <tr>
+        <th>Date</th>
+        <th>Product</th>
+        <th>Warehouse</th>
+        <th>Type</th>
+        <th class="text-end">Quantity</th>
+        <th>Reference</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let tx of transactions">
+        <td>{{ tx.createdAt | date:'medium' }}</td>
+        <td>{{ tx.productName }}</td>
+        <td>{{ tx.warehouseName }}</td>
+        <td><span [class]="typeBadgeClass(tx.type)">{{ tx.type }}</span></td>
+        <td class="text-end">{{ tx.quantity }}</td>
+        <td>
+          <span *ngIf="tx.referenceId" class="text-muted">#{{ tx.referenceId }}</span>
+          <span *ngIf="!tx.referenceId" class="text-muted">&mdash;</span>
+        </td>
+      </tr>
+      <tr *ngIf="transactions.length === 0">
+        <td colspan="6" class="text-center text-muted py-4">No transactions found.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>

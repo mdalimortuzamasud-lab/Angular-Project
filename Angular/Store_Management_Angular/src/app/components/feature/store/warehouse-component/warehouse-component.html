@@ -1,0 +1,110 @@
+<div class="card">
+
+    <div class="card-header">
+        <h4>
+            {{ selectedId ? 'Update Warehouse' : 'Add Warehouse' }}
+        </h4>
+    </div>
+
+    <div class="card-body">
+
+        <div class="mb-3">
+            <label>Warehouse Name</label>
+
+            <input
+                class="form-control"
+                [(ngModel)]="warehouse.name"
+                name="name">
+        </div>
+
+        <div class="mb-3">
+            <label>Branch</label>
+
+            <select
+                class="form-select"
+                [(ngModel)]="warehouse.branchId"
+                name="branchId">
+
+                <option [ngValue]="0">
+                    Select Branch
+                </option>
+
+                <option
+                    *ngFor="let b of branches"
+                    [ngValue]="b.id">
+
+                    {{ b.name }}
+
+                </option>
+
+            </select>
+        </div>
+
+        <button
+            class="btn btn-success"
+            (click)="save()">
+
+            {{ selectedId ? 'Update' : 'Save' }}
+
+        </button>
+
+        <button
+            class="btn btn-secondary ms-2"
+            (click)="resetForm()">
+
+            Clear
+
+        </button>
+
+    </div>
+
+</div>
+
+<hr>
+
+<table class="table table-bordered table-hover">
+
+    <thead>
+
+    <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Branch</th>
+        <th width="170">Action</th>
+    </tr>
+
+    </thead>
+
+    <tbody>
+
+    <tr *ngFor="let item of warehouses; let i=index">
+
+        <td>{{ i+1 }}</td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.branchName }}</td>
+
+        <td>
+
+            <button
+                class="btn btn-warning btn-sm"
+                (click)="edit(item)">
+
+                Edit
+
+            </button>
+
+            <button
+                class="btn btn-danger btn-sm ms-2"
+                (click)="delete(item.id)">
+
+                Delete
+
+            </button>
+
+        </td>
+
+    </tr>
+
+    </tbody>
+
+</table>

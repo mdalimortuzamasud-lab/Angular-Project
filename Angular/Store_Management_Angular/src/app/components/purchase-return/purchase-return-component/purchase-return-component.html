@@ -1,0 +1,117 @@
+<div class="container mt-3">
+  <h2>Purchase Return</h2>
+
+  <form [formGroup]="purchaseReturnForm" (ngSubmit)="save()">
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Purchase</label>
+        <select class="form-select" formControlName="purchaseId">
+          <option value="">Select Purchase</option>
+          <option *ngFor="let p of purchases" [value]="p.id">
+            {{ getPurchaseName(p.id) }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Total Amount</label>
+        <input type="number" class="form-control" formControlName="totalAmount" readonly>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="text-muted mb-2">Loading purchase items...</div>
+    <div *ngIf="error" class="text-danger mb-2">{{ error }}</div>
+
+    <!-- Return items table: product dropdown restricted to this purchase's items.
+         [ngModelOptions]="{standalone: true}" is required on every ngModel field
+         here because this table sits inside a [formGroup] form — without it,
+         Angular throws NG01350 (ngModel cannot be used with a parent formGroup)
+         which can silently blank the page. -->
+    <table class="table table-bordered" *ngIf="!loading">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Quantity to Return</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of returnItems; let i = index">
+          <td>
+            <select
+              class="form-select"
+              [(ngModel)]="item.productId"
+              [ngModelOptions]="{ standalone: true }"
+              name="product{{ i }}">
+              <option [ngValue]="0">Select Product</option>
+              <option *ngFor="let purchased of items" [ngValue]="purchased.productId">
+                {{ purchased.productName }} (purchased: {{ purchased.quantity }})
+              </option>
+            </select>
+          </td>
+
+          <td>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="item.quantity"
+              [ngModelOptions]="{ standalone: true }"
+              name="quantity{{ i }}"
+              [max]="getMaxQuantity(item.productId) ?? null"
+              min="0"
+              (input)="onQuantityChange(item)">
+          </td>
+
+          <td class="text-center">
+            <button type="button" class="btn btn-danger btn-sm" (click)="removeItem(i)">Delete</button>
+          </td>
+        </tr>
+
+        <tr *ngIf="returnItems.length === 0">
+          <td colspan="3" class="text-center text-muted">No items added yet.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary mb-3" (click)="addItem()">+ Add Item</button>
+
+    <div>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="purchaseReturnForm.invalid || returnItems.length === 0">
+        {{ editId ? 'Update Return' : 'Save Return' }}
+      </button>
+      <button type="button" class="btn btn-outline-secondary ms-2" (click)="reset()">Reset</button>
+    </div>
+  </form>
+
+  <hr>
+
+  <h3>Purchase Returns</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Purchase</th>
+        <th>Total Amount</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let ret of purchaseReturns">
+        <td>{{ ret.id }}</td>
+        <td>{{ getPurchaseName(ret.purchaseId) }}</td>
+        <td>{{ ret.totalAmount }}</td>
+        <td>
+          <button class="btn btn-sm btn-warning" (click)="edit(ret)">Edit</button>
+        </td>
+      </tr>
+
+      <tr *ngIf="purchaseReturns.length === 0">
+        <td colspan="4" class="text-center text-muted">No purchase returns yet.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

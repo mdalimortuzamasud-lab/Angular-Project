@@ -1,0 +1,590 @@
+<div class="container-fluid py-4">
+
+  <!-- =========================
+       PAGE HEADER
+  ========================== -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+      <h3 class="fw-bold mb-1">
+        <i class="bi bi-arrow-return-left me-2"></i>
+        Sale Return
+      </h3>
+
+      <p class="text-muted mb-0">
+        Manage customer sale returns
+      </p>
+    </div>
+
+    <!-- Right Aligned Reset Button -->
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      (click)="reset()">
+
+      <i class="bi bi-arrow-clockwise me-1"></i>
+      Reset
+    </button>
+
+  </div>
+
+
+  <!-- =========================
+       ERROR MESSAGE
+  ========================== -->
+  <div
+    *ngIf="error"
+    class="alert alert-danger alert-dismissible fade show">
+
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    {{ error }}
+
+    <button
+      type="button"
+      class="btn-close"
+      (click)="error = null">
+    </button>
+
+  </div>
+
+
+  <!-- =========================
+       SALE RETURN FORM
+  ========================== -->
+  <div class="card shadow-sm mb-4">
+
+    <div class="card-header bg-white">
+      <h5 class="mb-0 fw-bold">
+
+        <i
+          class="bi"
+          [ngClass]="editId ? 'bi-pencil-square' : 'bi-plus-circle'">
+        </i>
+
+        {{ editId ? 'Update Sale Return' : 'Create Sale Return' }}
+
+      </h5>
+    </div>
+
+
+    <div class="card-body">
+
+      <form
+        [formGroup]="saleReturnForm"
+        (ngSubmit)="save()">
+
+        <div class="row g-3">
+
+          <!-- SALE -->
+          <div class="col-md-6">
+
+            <label class="form-label fw-semibold">
+              Select Sale
+              <span class="text-danger">*</span>
+            </label>
+
+            <select
+              class="form-select"
+              formControlName="saleId"
+              [class.is-invalid]="
+                saleReturnForm.get('saleId')?.invalid &&
+                saleReturnForm.get('saleId')?.touched
+              ">
+
+              <option value="">
+                -- Select Sale --
+              </option>
+
+              <option
+                *ngFor="let sale of sales"
+                [value]="sale.id">
+
+                Sale #{{ sale.id }} - {{ getCustomerName(sale.customerId) }}
+
+              </option>
+
+            </select>
+
+            <div
+              class="invalid-feedback"
+              *ngIf="
+                saleReturnForm.get('saleId')?.invalid &&
+                saleReturnForm.get('saleId')?.touched
+              ">
+
+              Please select a sale.
+
+            </div>
+
+          </div>
+
+
+          <!-- TOTAL AMOUNT -->
+          <div class="col-md-6">
+
+            <label class="form-label fw-semibold">
+              Total Refund Amount
+            </label>
+
+            <div class="input-group">
+
+              <span class="input-group-text">
+                ৳
+              </span>
+
+              <input
+                type="number"
+                class="form-control fw-bold"
+                formControlName="totalAmount"
+                readonly>
+
+            </div>
+
+            <small class="text-muted">
+              Automatically calculated from returned quantity and original sale price.
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- SELECTED SALE INFO -->
+        <div
+          *ngIf="saleReturnForm.get('saleId')?.value"
+          class="alert alert-info mt-4 mb-0">
+
+          <i class="bi bi-info-circle me-2"></i>
+
+          Selected:
+          <strong>
+            {{ getSaleName(saleReturnForm.get('saleId')?.value) }}
+          </strong>
+
+          <span
+            *ngIf="loading"
+            class="ms-3">
+
+            <span
+              class="spinner-border spinner-border-sm">
+            </span>
+
+            Loading sale items...
+
+          </span>
+
+        </div>
+
+
+        <!-- RETURN ITEMS -->
+        <div class="mt-4">
+
+          <!-- Header with Right-Aligned Add Item Button -->
+          <div
+            class="d-flex justify-content-between align-items-center mb-3">
+
+            <h5 class="fw-bold mb-0">
+
+              <i class="bi bi-box-seam me-2"></i>
+              Return Items
+
+            </h5>
+
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              (click)="addItem()"
+              [disabled]="!saleReturnForm.get('saleId')?.value">
+
+              <i class="bi bi-plus-lg me-1"></i>
+              Add Item
+
+            </button>
+
+          </div>
+
+
+          <!-- NO ITEMS -->
+          <div
+            *ngIf="returnItems.length === 0"
+            class="text-center border rounded p-4 text-muted">
+
+            <i
+              class="bi bi-cart-x fs-1 d-block mb-2">
+            </i>
+
+            No return items added yet.
+
+            <div
+              *ngIf="!saleReturnForm.get('saleId')?.value"
+              class="small mt-2">
+
+              Select a sale first.
+
+            </div>
+
+          </div>
+
+
+          <!-- RETURN ITEM TABLE -->
+          <div
+            *ngIf="returnItems.length > 0"
+            class="table-responsive">
+
+            <table
+              class="table table-bordered align-middle mb-0">
+
+              <thead
+                class="table-light">
+
+                <tr>
+
+                  <th style="width: 45%;">
+                    Product
+                  </th>
+
+                  <th style="width: 20%;">
+                    Sold Qty
+                  </th>
+
+                  <th style="width: 20%;">
+                    Return Qty
+                  </th>
+
+                  <th
+                    style="width: 15%;"
+                    class="text-center">
+
+                    Action
+
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody>
+
+                <tr
+                  *ngFor="
+                    let item of returnItems;
+                    let i = index
+                  ">
+
+                  <!-- PRODUCT -->
+                  <td>
+
+                    <select
+                      class="form-select"
+                      [(ngModel)]="item.productId"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="calculateTotal()">
+
+                      <option
+                        [ngValue]="0">
+
+                        -- Select Product --
+
+                      </option>
+
+                      <option
+                        *ngFor="let saleItem of items"
+                        [ngValue]="saleItem.productId">
+
+                        {{ saleItem.productName }}
+
+                      </option>
+
+                    </select>
+
+                  </td>
+
+
+                  <!-- SOLD QUANTITY -->
+                  <td>
+
+                    <span
+                      *ngIf="item.productId; else noProduct"
+                      class="badge bg-secondary">
+
+                      {{ getMaxQuantity(item.productId) || 0 }}
+
+                    </span>
+
+                    <ng-template #noProduct>
+
+                      <span class="text-muted">
+                        -
+                      </span>
+
+                    </ng-template>
+
+                  </td>
+
+
+                  <!-- RETURN QUANTITY -->
+                  <td>
+
+                    <input
+                      type="number"
+                      class="form-control"
+                      min="1"
+                      [max]="getMaxQuantity(item.productId) || null"
+                      [(ngModel)]="item.quantity"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="onQuantityChange(item)">
+
+                    <small
+                      *ngIf="item.productId"
+                      class="text-muted">
+
+                      Max:
+                      {{ getMaxQuantity(item.productId) }}
+
+                    </small>
+
+                  </td>
+
+
+                  <!-- DELETE ITEM LINE -->
+                  <td
+                    class="text-center">
+
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger btn-sm"
+                      (click)="removeItem(i)">
+
+                      <i class="bi bi-trash"></i>
+
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+
+        <!-- FORM ACTIONS (RIGHT ALIGNED) -->
+        <div
+          class="d-flex justify-content-end gap-2 mt-4">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="reset()">
+
+            <i class="bi bi-x-circle me-1"></i>
+            Cancel
+
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-success"
+            [disabled]="
+              saleReturnForm.invalid ||
+              returnItems.length === 0
+            ">
+
+            <i
+              class="bi"
+              [ngClass]="
+                editId
+                  ? 'bi-check-circle'
+                  : 'bi-save'
+              ">
+
+            </i>
+
+            {{ editId ? 'Update Return' : 'Save Return' }}
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       SALE RETURNS LIST
+  ========================== -->
+  <div class="card shadow-sm">
+
+    <div
+      class="card-header bg-white d-flex justify-content-between align-items-center">
+
+      <h5 class="fw-bold mb-0">
+
+        <i class="bi bi-list-ul me-2"></i>
+        Sale Returns
+
+      </h5>
+
+      <span
+        class="badge bg-primary">
+
+        {{ saleReturns.length }}
+
+      </span>
+
+    </div>
+
+
+    <div
+      class="card-body p-0">
+
+      <div
+        *ngIf="saleReturns.length === 0"
+        class="text-center text-muted p-4">
+
+        <i
+          class="bi bi-inbox fs-1 d-block mb-2">
+        </i>
+
+        No sale returns found.
+
+      </div>
+
+
+      <div
+        *ngIf="saleReturns.length > 0"
+        class="table-responsive">
+
+        <table
+          class="table table-hover align-middle mb-0">
+
+          <thead
+            class="table-light">
+
+            <tr>
+
+              <th>
+                #
+              </th>
+
+              <th>
+                Sale
+              </th>
+
+              <th>
+                Customer
+              </th>
+
+              <th>
+                Total Amount
+              </th>
+
+              <th
+                class="text-center">
+
+                Actions
+
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              *ngFor="
+                let saleReturn of saleReturns;
+                let i = index
+              ">
+
+              <td>
+
+                {{ i + 1 }}
+
+              </td>
+
+
+              <td>
+
+                <span
+                  class="badge bg-info text-dark">
+
+                  Sale #{{ saleReturn.saleId }}
+
+                </span>
+
+              </td>
+
+
+              <td>
+
+                {{ getSaleName(saleReturn.saleId) }}
+
+              </td>
+
+
+              <td>
+
+                <strong>
+
+                  ৳{{ saleReturn.totalAmount | number:'1.2-2' }}
+
+                </strong>
+
+              </td>
+
+
+              <td
+                class="text-center">
+
+                <div
+                  class="btn-group">
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Edit"
+                    (click)="edit(saleReturn)">
+
+                    <i class="bi bi-pencil"></i>
+
+                  </button>
+
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Delete"
+                    (click)="deleteSaleReturn(saleReturn.id)">
+
+                    <i class="bi bi-trash"></i>
+
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

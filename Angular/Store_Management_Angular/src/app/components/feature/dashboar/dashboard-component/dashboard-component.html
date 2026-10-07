@@ -1,0 +1,325 @@
+<div class="container-fluid mt-4 dashboard">
+
+  <!-- Welcome header -->
+  <div class="dash-header mb-4">
+    <div>
+      <h2 class="mb-1">Welcome back, {{ authService.currentUser?.username }}</h2>
+      <p class="text-muted mb-0">
+        <span class="badge role-badge">{{ authService.currentUser?.roleName }}</span>
+        <span *ngIf="authService.currentUser?.branchName" class="ms-2">
+          <i class="bi bi-geo-alt"></i> {{ authService.currentUser?.branchName }}
+        </span>
+        <span *ngIf="authService.isSuperAdmin()" class="ms-2">
+          <i class="bi bi-diagram-3"></i> All branches
+        </span>
+      </p>
+    </div>
+    <div class="dash-header-date text-muted small" *ngIf="latest">
+      Snapshot last updated {{ latest.lastCalculatedAt | date:'medium' }}
+      <span *ngIf="latest.generatedByUserName"> by {{ latest.generatedByUserName }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <!-- ===================== Branch info panel ===================== -->
+  <div class="mb-4" *ngIf="!branchInfoLoading">
+
+    <!-- Regular user: details for their own branch -->
+    <div class="card branch-card shadow-sm" *ngIf="branch">
+      <div class="card-body">
+        <div class="branch-card-top">
+          <div>
+            <div class="text-muted small text-uppercase">Your Branch</div>
+            <h4 class="mb-1">{{ branch.name }}</h4>
+            <div class="text-muted"><i class="bi bi-geo-alt"></i> {{ branch.location }}</div>
+          </div>
+          <div class="branch-card-stats">
+            <div class="branch-card-stat">
+              <div class="branch-card-stat-value">{{ warehouses.length }}</div>
+              <div class="branch-card-stat-label">Warehouse(s)</div>
+            </div>
+            <div class="branch-card-stat" *ngIf="teamSize !== null">
+              <div class="branch-card-stat-value">{{ teamSize }}</div>
+              <div class="branch-card-stat-label">Team member(s)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="warehouse-chips mt-3" *ngIf="warehouses.length">
+          <span class="warehouse-chip" *ngFor="let w of warehouses">
+            <i class="bi bi-box-seam"></i> {{ w.name }}
+          </span>
+        </div>
+        <div class="text-muted small mt-3" *ngIf="!warehouses.length">
+          No warehouses have been set up for this branch yet.
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPER_ADMIN: no single branch, so show an org-wide summary instead -->
+    <div class="card branch-card shadow-sm" *ngIf="!branch && branchCount !== null">
+      <div class="card-body branch-card-top">
+        <div>
+          <div class="text-muted small text-uppercase">Organization</div>
+          <h4 class="mb-1">All Branches</h4>
+          <div class="text-muted">You have visibility across every branch in the system.</div>
+        </div>
+        <div class="branch-card-stats">
+          <div class="branch-card-stat">
+            <div class="branch-card-stat-value">{{ branchCount }}</div>
+            <div class="branch-card-stat-label">Branch(es)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="branchInfoLoading" class="text-muted mb-4">
+    <span class="spinner-border spinner-border-sm me-2"></span> Loading branch info...
+  </div>
+
+  <!-- ===================== KPI stat cards ===================== -->
+  <div *ngIf="loading" class="text-muted mb-3">
+    <span class="spinner-border spinner-border-sm me-2"></span> Loading dashboard...
+  </div>
+
+  <div class="row g-3" *ngIf="!loading && latest">
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-blue">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
+          <div class="text-muted small">Sales Today</div>
+          <div class="fs-4">{{ latest.totalSalesToday | currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-blue">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+          <div class="text-muted small">Sales This Month</div>
+          <div class="fs-4">{{ latest.totalSalesThisMonth | currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-green">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-piggy-bank"></i></div>
+          <div class="text-muted small">Profit Today</div>
+          <div class="fs-4">{{ latest.totalProfitToday | currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-green">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-bar-chart-line"></i></div>
+          <div class="text-muted small">Profit This Month</div>
+          <div class="fs-4">{{ latest.totalProfitThisMonth | currency }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-purple">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-cart-check"></i></div>
+          <div class="text-muted small">Purchases Today</div>
+          <div class="fs-4">{{ latest.totalPurchasesToday | currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-purple">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-cart3"></i></div>
+          <div class="text-muted small">Purchases This Month</div>
+          <div class="fs-4">{{ latest.totalPurchasesThisMonth | currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-red">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-exclamation-circle"></i></div>
+          <div class="text-muted small">Due Amount</div>
+          <div class="fs-4">{{ latest.totalDueAmount | currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-amber">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-boxes"></i></div>
+          <div class="text-muted small">Stock Value</div>
+          <div class="fs-4">{{ latest.totalStockValue | currency }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-amber">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+          <div class="text-muted small">Low Stock Products</div>
+          <div class="fs-4">{{ latest.lowStockProductCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-red">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-x-octagon"></i></div>
+          <div class="text-muted small">Out of Stock</div>
+          <div class="fs-4">{{ latest.outOfStockProductCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-blue">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-box"></i></div>
+          <div class="text-muted small">Total Products</div>
+          <div class="fs-4">{{ latest.totalProducts }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-purple">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-tags"></i></div>
+          <div class="text-muted small">Categories</div>
+          <div class="fs-4">{{ latest.totalCategories }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-green">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-people"></i></div>
+          <div class="text-muted small">Customers</div>
+          <div class="fs-4">{{ latest.totalCustomers }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-green">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-truck"></i></div>
+          <div class="text-muted small">Suppliers</div>
+          <div class="fs-4">{{ latest.totalSuppliers }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6" *ngIf="authService.isSuperAdmin()">
+      <div class="card stat-card shadow-sm stat-blue">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-building"></i></div>
+          <div class="text-muted small">Total Branches</div>
+          <div class="fs-4">{{ latest.totalBranches }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stat-card shadow-sm stat-blue">
+        <div class="card-body">
+          <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+          <div class="text-muted small">Warehouses</div>
+          <div class="fs-4">{{ latest.totalWarehouses }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div *ngIf="!loading && !latest" class="alert alert-info">
+    No dashboard snapshot has been saved for your branch yet.
+  </div>
+
+  <!-- ===================== Low stock + recent sales ===================== -->
+  <div class="row g-3 mt-1">
+
+    <div class="col-lg-6">
+      <div class="card activity-card shadow-sm h-100">
+        <div class="card-body">
+          <div class="activity-card-header">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Low Stock Items</h5>
+            <a routerLink="/inventory" class="small">View all</a>
+          </div>
+
+          <div *ngIf="activityLoading" class="text-muted small py-3">
+            <span class="spinner-border spinner-border-sm me-2"></span> Loading...
+          </div>
+
+          <div *ngIf="!activityLoading && !lowStockItems.length" class="text-muted small py-3">
+            Nothing is running low right now.
+          </div>
+
+          <ul class="activity-list" *ngIf="!activityLoading && lowStockItems.length">
+            <li class="activity-row" *ngFor="let item of lowStockItems">
+              <div class="activity-row-main">
+                <div class="fw-semibold">{{ item.productName }}</div>
+                <div class="text-muted small">{{ item.warehouseName }}</div>
+              </div>
+              <span class="qty-badge" [class.qty-out]="item.availableQuantity <= 0">
+                {{ item.availableQuantity <= 0 ? 'Out of stock' : item.availableQuantity + ' left' }}
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card activity-card shadow-sm h-100">
+        <div class="card-body">
+          <div class="activity-card-header">
+            <h5 class="mb-0"><i class="bi bi-receipt text-primary me-2"></i>Recent Sales</h5>
+            <a routerLink="/sales" class="small">View all</a>
+          </div>
+
+          <div *ngIf="activityLoading" class="text-muted small py-3">
+            <span class="spinner-border spinner-border-sm me-2"></span> Loading...
+          </div>
+
+          <div *ngIf="!activityLoading && !recentSales.length" class="text-muted small py-3">
+            No sales recorded yet.
+          </div>
+
+          <ul class="activity-list" *ngIf="!activityLoading && recentSales.length">
+            <li class="activity-row" *ngFor="let sale of recentSales">
+              <div class="activity-row-main">
+                <div class="fw-semibold">{{ sale.customerName }}</div>
+                <div class="text-muted small">{{ sale.warehouseName }}</div>
+              </div>
+              <div class="text-end">
+                <div class="fw-semibold">{{ sale.totalAmount | currency }}</div>
+                <span class="status-badge" [ngClass]="'status-' + sale.status.toLowerCase()">{{ sale.status }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dynamic Quick Actions -->
+  <div class="mt-5" *ngIf="quickActions.length">
+    <h5>Quick Actions</h5>
+    <div class="d-flex gap-2 flex-wrap">
+      <a *ngFor="let action of quickActions"
+         [routerLink]="action.route" 
+         class="btn" 
+         [ngClass]="action.btnClass || 'btn-outline-primary'">
+        <i class="bi me-1" [ngClass]="action.icon"></i>
+        {{ action.label }}
+      </a>
+    </div>
+  </div>
+
+</div>

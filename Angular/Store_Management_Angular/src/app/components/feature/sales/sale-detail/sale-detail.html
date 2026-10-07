@@ -1,0 +1,147 @@
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Sale #{{ saleId }}</h3>
+    <a routerLink="/sales" class="btn btn-outline-secondary btn-sm">Back to list</a>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+  <!-- Sale header summary -->
+  <div class="card mb-4" *ngIf="sale">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="text-muted small">Customer</div>
+          <div>{{ sale.customerName }}</div>
+        </div>
+        <div class="col-md-2">
+          <div class="text-muted small">Warehouse</div>
+          <div>{{ sale.warehouseName }}</div>
+        </div>
+        <div class="col-md-2">
+          <div class="text-muted small">Total</div>
+          <div>{{ sale.totalAmount | number:'1.2-2' }}</div>
+        </div>
+        <div class="col-md-2">
+          <div class="text-muted small">Paid</div>
+          <div>{{ sale.paidAmount | number:'1.2-2' }}</div>
+        </div>
+        <div class="col-md-1">
+          <div class="text-muted small">Due</div>
+          <div>{{ sale.dueAmount | number:'1.2-2' }}</div>
+        </div>
+        <div class="col-md-2">
+          <div class="text-muted small">Status</div>
+          <span [class]="statusBadgeClass(sale.status)">{{ sale.status }}</span>
+        </div>
+      </div>
+      <div class="mt-3">
+        <a [routerLink]="['/sales', saleId, 'edit']" class="btn btn-sm btn-outline-primary">
+          Edit Sale / Update Paid Amount
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Existing items -->
+  <h5>Items</h5>
+  <div class="text-center my-3" *ngIf="loading">
+    <div class="spinner-border" role="status"></div>
+  </div>
+
+  <table class="table table-sm align-middle" *ngIf="!loading">
+    <thead class="table-light">
+      <tr>
+        <th>Product</th>
+        <th class="text-end" style="width: 140px;">Quantity</th>
+        <th class="text-end" style="width: 140px;">Selling Price</th>
+        <th class="text-end" style="width: 140px;">Line Total</th>
+        <th class="text-end" style="width: 160px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of items">
+        <ng-container *ngIf="editingItemId !== item.id; else editRow">
+          <td>{{ item.productName }}</td>
+          <td class="text-end">{{ item.quantity }}</td>
+          <td class="text-end">{{ item.sellingPrice | number:'1.2-2' }}</td>
+          <td class="text-end">{{ item.totalPrice | number:'1.2-2' }}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary me-1" (click)="startEdit(item)">Edit</button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deleteItem(item)">Delete</button>
+          </td>
+        </ng-container>
+
+        <ng-template #editRow>
+          <td>{{ item.productName }}</td>
+          <td class="text-end">
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="editQuantity" min="0.01" step="0.01">
+          </td>
+          <td class="text-end">
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="editSellingPrice" min="0" step="0.01">
+          </td>
+          <td class="text-end">
+            {{ ((editQuantity || 0) * (editSellingPrice || 0)) | number:'1.2-2' }}
+          </td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-success me-1" (click)="saveEdit(item)">Save</button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="cancelEdit()">Cancel</button>
+          </td>
+        </ng-template>
+      </tr>
+      <tr *ngIf="items.length === 0">
+        <td colspan="5" class="text-center text-muted py-3">No items added yet.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Batch add grid -->
+  <h5 class="mt-4">Sell Products</h5>
+  <table class="table table-sm">
+    <thead class="table-light">
+      <tr>
+        <th>Product</th>
+        <th style="width: 140px;">Quantity</th>
+        <th style="width: 160px;">Selling Price</th>
+        <th style="width: 60px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of draftItems; let i = index">
+        <td>
+          <select class="form-select form-select-sm" [(ngModel)]="row.productId" (ngModelChange)="onDraftProductChange(row)">
+            <option [ngValue]="null" disabled>Select product</option>
+            <option *ngFor="let p of products" [ngValue]="p.id">{{ p.name }}</option>
+          </select>
+        </td>
+        <td>
+          <input type="number" class="form-control form-control-sm" [(ngModel)]="row.quantity" min="0.01" step="0.01" placeholder="Qty">
+        </td>
+        <td>
+          <input type="number" class="form-control form-control-sm" [(ngModel)]="row.sellingPrice" min="0" step="0.01" placeholder="Price">
+        </td>
+        <td>
+          <button class="btn btn-sm btn-outline-danger" (click)="removeDraftRow(i)" [disabled]="draftItems.length === 1">
+            &times;
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-secondary btn-sm" (click)="addDraftRow()">+ Add another row</button>
+    <button class="btn btn-primary btn-sm" [disabled]="!canSubmitDraft" (click)="submitDraftItems()">
+      Confirm Sale Items
+    </button>
+  </div>
+
+  <p class="text-muted small mt-2">
+    If any row requests more than the available stock in this sale's
+    warehouse, the whole batch is rejected (nothing partially saved) and
+    the exact shortfall is shown above.
+  </p>
+
+</div>

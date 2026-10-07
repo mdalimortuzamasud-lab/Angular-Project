@@ -1,0 +1,76 @@
+<div class="container mt-4" style="max-width: 600px;">
+
+  <h3>{{ isEditMode ? 'Edit Sale' : 'New Sale' }}</h3>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="text-center my-4" *ngIf="loading">
+    <div class="spinner-border" role="status"></div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" *ngIf="!loading">
+
+    <div class="mb-3">
+      <label class="form-label">Customer</label>
+      <select class="form-select" formControlName="customerId">
+        <option [ngValue]="null" disabled>Select customer</option>
+        <option *ngFor="let c of customers" [ngValue]="c.id">{{ c.name }}</option>
+      </select>
+      <div class="text-danger small" *ngIf="form.get('customerId')?.touched && form.get('customerId')?.invalid">
+        Customer is required.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Warehouse</label>
+      <select class="form-select" formControlName="warehouseId">
+        <option [ngValue]="null" disabled>Select warehouse</option>
+        <option *ngFor="let w of warehouses" [ngValue]="w.id">{{ w.name }}</option>
+      </select>
+      <div class="text-danger small" *ngIf="form.get('warehouseId')?.touched && form.get('warehouseId')?.invalid">
+        Warehouse is required.
+      </div>
+    </div>
+
+    <div class="mb-3" *ngIf="isEditMode">
+      <label class="form-label">Total Amount (auto-calculated from items)</label>
+      <input type="number" class="form-control" formControlName="totalAmount" readonly>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Paid Amount</label>
+      <input type="number" class="form-control" formControlName="paidAmount" min="0" step="0.01">
+      <div class="text-danger small" *ngIf="form.get('paidAmount')?.touched && form.get('paidAmount')?.invalid">
+        Paid amount must be 0 or more.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Status</label>
+      <select class="form-select" formControlName="status">
+        <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+      </select>
+      <div class="form-text">
+        Status is recalculated automatically (PENDING/PARTIAL/PAID) whenever
+        items are added, based on paid vs. total amount. Set it to CANCELLED
+        manually here if needed — cancelled sales are left alone by that
+        automatic recalculation.
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update' : 'Create') }}
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
+        Cancel
+      </button>
+    </div>
+
+    <p class="text-muted small mt-3" *ngIf="!isEditMode">
+      After creating the sale, you'll be taken to its detail page to add products.
+    </p>
+
+  </form>
+
+</div>

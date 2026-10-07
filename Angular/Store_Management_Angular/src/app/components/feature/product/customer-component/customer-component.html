@@ -1,0 +1,110 @@
+<div class="container mt-4">
+
+    <h3>Customer CRUD</h3>
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label>Name</label>
+                <input
+                    class="form-control"
+                    formControlName="name">
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label>Phone</label>
+                <input
+                    class="form-control"
+                    formControlName="phone">
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label>Email</label>
+                <input
+                    type="email"
+                    class="form-control"
+                    formControlName="email">
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label>Address</label>
+                <input
+                    class="form-control"
+                    formControlName="address">
+            </div>
+
+        </div>
+
+        <button
+            type="submit"
+            class="btn btn-primary">
+
+            {{ isEdit ? 'Update' : 'Save' }}
+
+        </button>
+
+        <button
+            type="button"
+            class="btn btn-secondary ms-2"
+            (click)="resetForm()">
+
+            Clear
+
+        </button>
+
+    </form>
+
+    <hr>
+
+    <table class="table table-bordered table-striped">
+
+        <thead>
+
+        <tr>
+
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th width="180">Action</th>
+
+        </tr>
+
+        </thead>
+
+        <tbody>
+
+        <tr *ngFor="let customer of customers">
+
+            <td>{{ customer.id }}</td>
+            <td>{{ customer.name }}</td>
+            <td>{{ customer.phone }}</td>
+            <td>{{ customer.email }}</td>
+            <td>{{ customer.address }}</td>
+
+            <td>
+
+                <button
+                    class="btn btn-warning btn-sm"
+                    (click)="edit(customer)">
+                    Edit
+                </button>
+
+                <button
+                    class="btn btn-danger btn-sm ms-2"
+                    (click)="delete(customer.id)">
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+
+        </tbody>
+
+    </table>
+
+</div>

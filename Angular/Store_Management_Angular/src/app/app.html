@@ -1,0 +1,15 @@
+<ng-container *ngIf="showAppChrome">
+  <app-header></app-header>
+</ng-container>
+
+<div class="layout" [class.layout--no-chrome]="!showAppChrome">
+  <app-sidebar *ngIf="showAppChrome"></app-sidebar>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+<ng-container *ngIf="showAppChrome">
+  <app-footer></app-footer>
+</ng-container>
